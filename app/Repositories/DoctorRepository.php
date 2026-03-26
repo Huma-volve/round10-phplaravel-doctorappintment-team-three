@@ -25,7 +25,7 @@ class DoctorRepository
         if ($patientId) {
             $query->withExists([
                 'favorites as is_favorite' => function (Builder $q) use ($patientId): void {
-                    $q->where('patient_id', $patientId);
+                    $q->where('favorites.patient_id', $patientId);
                 },
             ]);
         }
@@ -50,7 +50,7 @@ class DoctorRepository
         if ($patientId) {
             $query->withExists([
                 'favorites as is_favorite' => function (Builder $q) use ($patientId): void {
-                    $q->where('patient_id', $patientId);
+                    $q->where('favorites.patient_id', $patientId);
                 },
             ]);
         }
@@ -85,14 +85,16 @@ class DoctorRepository
     {
         \App\Models\Favorite::firstOrCreate([
             'patient_id' => $patientId,
-            'doctor_id' => $doctorId,
+            'favoritable_type' => Doctor::class,
+            'favoritable_id' => $doctorId,
         ]);
     }
 
     public function removeFavorite(int $doctorId, int $patientId): void
     {
         \App\Models\Favorite::where('patient_id', $patientId)
-            ->where('doctor_id', $doctorId)
+            ->where('favoritable_type', Doctor::class)
+            ->where('favoritable_id', $doctorId)
             ->delete();
     }
 }

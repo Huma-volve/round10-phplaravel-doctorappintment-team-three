@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Favorite extends Model
 {
@@ -12,7 +13,8 @@ class Favorite extends Model
 
     protected $fillable = [
         'patient_id',
-        'doctor_id',
+        'favoritable_type',
+        'favoritable_id',
     ];
 
     public function patient(): BelongsTo
@@ -20,9 +22,8 @@ class Favorite extends Model
         return $this->belongsTo(Patient::class);
     }
 
-    public function doctor(): BelongsTo
+    public function favoritable(): MorphTo
     {
-        return $this->belongsTo(Doctor::class);
+        return $this->morphTo();
     }
 }
-

@@ -1,59 +1,229 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Doctor Appointment API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend API for a doctor appointment platform built with Laravel 12 and Sanctum.
+The system supports role-based users (patient, doctor, admin), booking lifecycle, doctor discovery, favorites, reviews, in-app notifications, and real-time chat broadcasting.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.2+
+- Laravel 12
+- MySQL / SQLite
+- Laravel Sanctum (token auth)
+- Laravel Broadcasting + Pusher
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Core Domain Modules
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Auth and account management
+- Doctor search and nearby discovery
+- Appointments and status updates
+- Favorites (doctors and clinics)
+- Reviews and session feedback
+- In-app notifications (with real-time broadcasting)
+- Patient-doctor chat (text/image/video)
+- Payment status updates
 
-## Learning Laravel
+## Project Structure
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Main application files:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- `app/Http/Controllers/API` - API endpoints
+- `app/Services` - use-case/business logic
+- `app/Repositories` - data access and query logic
+- `app/Models` - Eloquent models
+- `app/Events` - broadcasted events
+- `app/Observers` - model lifecycle notification triggers
+- `routes/api.php` - API routes
+- `routes/channels.php` - broadcast channel authorization
+- `database/migrations` - schema history
+- `database/seeders` - local/dev seed data
 
-## Laravel Sponsors
+## Implemented Features
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1) Favorites
 
-### Premium Partners
+- Patient can favorite/unfavorite doctors
+- Patient can favorite/unfavorite clinics
+- Unified favorites listing endpoint
+- Favorites persisted polymorphically in `favorites` table (`favoritable_type`, `favoritable_id`)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Key endpoints:
 
-## Contributing
+- `GET /api/favorites`
+- `POST /api/doctors/{doctor}/favorite`
+- `DELETE /api/doctors/{doctor}/favorite`
+- `POST /api/clinics/{clinic}/favorite`
+- `DELETE /api/clinics/{clinic}/favorite`
+- `DELETE /api/favorites/{favorite}`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2) Notifications
 
-## Code of Conduct
+- User notification inbox with unread count and read/mark-all-read actions
+- Admin manual broadcast notifications by target audience
+- Auto notifications from domain events (appointment/review/payment/session feedback/chat)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Key endpoints:
 
-## Security Vulnerabilities
+- `GET /api/notifications`
+- `GET /api/notifications/unread-count`
+- `POST /api/notifications/{inAppNotification}/read`
+- `POST /api/notifications/read-all`
+- `POST /api/admin/notifications/broadcast` (admin)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Notification model and types:
 
-## License
+- `app/Models/InAppNotification.php`
+- `app/Support/NotificationType.php`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 3) Real-Time Chat
+
+- Patient-doctor chat thread creation
+- Messages pagination
+- Send text/image/video
+- Mark chat read
+- Favorite/archive chat per user (via `chat_user` pivot)
+- Message broadcast event + receiver notification
+
+Key endpoints:
+
+- `GET /api/chats`
+- `POST /api/chats`
+- `GET /api/chats/{chat}`
+- `GET /api/chats/{chat}/messages`
+- `POST /api/chats/{chat}/messages`
+- `POST /api/chats/{chat}/read`
+- `POST /api/chats/{chat}/favorite`
+- `DELETE /api/chats/{chat}/favorite`
+- `POST /api/chats/{chat}/archive`
+- `DELETE /api/chats/{chat}/archive`
+
+Broadcast channels:
+
+- `private-user.{id}`
+- `private-chat.{chatId}`
+
+### 4) Reviews and Session Feedback
+
+- Patient can add one review per completed appointment
+- Patient can submit one session feedback per completed appointment
+- Doctor is notified on new review
+
+Key endpoints:
+
+- `GET /api/doctors/{doctor}/reviews`
+- `POST /api/appointments/{appointment}/review`
+- `POST /api/appointments/{appointment}/feedback`
+
+## Setup
+
+1. Install dependencies:
+
+```bash
+composer install
+```
+
+2. Configure environment:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+3. Set database credentials in `.env`
+
+4. Run migrations and seed demo data:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+5. Start the app:
+
+```bash
+php artisan serve
+```
+
+## Pusher / Broadcasting Configuration
+
+Set these environment variables:
+
+- `BROADCAST_CONNECTION=pusher`
+- `PUSHER_APP_ID=...`
+- `PUSHER_APP_KEY=...`
+- `PUSHER_APP_SECRET=...`
+- `PUSHER_APP_CLUSTER=...`
+- `PUSHER_HOST=`
+- `PUSHER_PORT=443`
+- `PUSHER_SCHEME=https`
+
+Broadcast auth route uses Sanctum and channel authorization is defined in `routes/channels.php`.
+
+## Seeder Data
+
+Seeder entrypoint:
+
+- `database/seeders/DatabaseSeeder.php`
+
+Main feature seeder:
+
+- `database/seeders/DoctorTestSeeder.php`
+
+This seeder creates realistic sample data for API and Postman testing:
+
+- 1 admin user + admin record
+- 2 patient users and profiles
+- 3 doctor users and doctor profiles in 3 clinics
+- 3 specializations
+- Completed, confirmed, and rescheduled appointments
+- Reviews
+- Session feedback
+- Doctor and clinic favorites
+- Chat thread, participants, and sample messages
+- Paid and pending payments
+- In-app notifications for patient, doctor, and admin scenarios
+
+## Seeded Test Accounts
+
+Use these credentials after `php artisan migrate:fresh --seed`:
+
+- Admin: `admin@example.com` / `password`
+- Patient 1: `patient@example.com` / `password`
+- Patient 2: `patient2@example.com` / `password`
+- Doctor 0: `doctor0@example.com` / `password`
+- Doctor 1: `doctor1@example.com` / `password`
+- Doctor 2: `doctor2@example.com` / `password`
+
+## Useful Commands
+
+```bash
+php artisan route:list --path=api
+php artisan test
+php artisan appointments:send-upcoming-reminders
+```
+
+## API Response Contract
+
+Success:
+
+```json
+{
+  "success": true,
+  "message": null,
+  "data": {}
+}
+```
+
+Error:
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {}
+}
+```
+
+## Notes
+
+- Most business APIs require `Authorization: Bearer <sanctum_token>`.
+- `GET /api/doctors/{doctor}/reviews` is public.
+- Notifications and chat broadcasts require valid Pusher credentials for real-time delivery.
